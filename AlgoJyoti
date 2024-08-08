@@ -1,0 +1,83 @@
+Sure! Here's a step-by-step algorithm to achieve the functionality described:
+
+### Algorithm
+
+#### 1. Adding a Student
+1. **Input**: Student details (Name, MobileNumber, Email, DateOfBirth).
+2. **Process**:
+   1. Check for duplicates:
+      - Query the `DuplicateChecker` table to see if any record exists with the same `MobileNumber` or `Email`.
+      - If a duplicate is found, print a message and terminate the process.
+   2. Insert the new student:
+      - Insert the student details into the `Student` table.
+      - Retrieve the `StudentId` of the newly inserted student.
+   3. Insert duplicate checkers:
+      - Insert a record into the `DuplicateChecker` table for the `MobileNumber`.
+      - Insert a record into the `DuplicateChecker` table for the `Email`.
+3. **Output**: Confirmation message.
+
+#### 2. Checking for Duplicates
+1. **Input**: MobileNumber, Email.
+2. **Process**:
+   1. Query the `DuplicateChecker` table:
+      - Check if any record exists with the `CheckType` as `MobileNumber` and `CheckValue` as the given MobileNumber.
+      - Check if any record exists with the `CheckType` as `Email` and `CheckValue` as the given Email.
+   2. Return `true` if any duplicate is found, otherwise return `false`.
+
+#### 3. Adding a Payment
+1. **Input**: StudentId, PaymentMode, Amount.
+2. **Process**:
+   1. Insert the payment details into the `Payment` table.
+      - Include `StudentId`, `PaymentMode`, current date and time as `PaymentDate`, and `Amount`.
+3. **Output**: Confirmation message.
+
+### Detailed Steps
+
+#### Adding a Student
+1. **Start**
+2. **Input**: `Name`, `MobileNumber`, `Email`, `DateOfBirth`
+3. **Call** `IsDuplicate(MobileNumber, Email)`
+4. **If** `IsDuplicate` returns `true`
+   - **Print** "Duplicate entry found. Student already exists."
+   - **End**
+5. **Insert** into `Student` table:
+   - `Name`
+   - `MobileNumber`
+   - `Email`
+   - `DateOfBirth`
+6. **Retrieve** `StudentId` of the inserted student
+7. **Insert** into `DuplicateChecker` table:
+   - `StudentId`
+   - `CheckType` = 'MobileNumber'
+   - `CheckValue` = MobileNumber
+8. **Insert** into `DuplicateChecker` table:
+   - `StudentId`
+   - `CheckType` = 'Email'
+   - `CheckValue` = Email
+9. **Print** "Student added successfully."
+10. **End**
+
+#### Checking for Duplicates
+1. **Start**
+2. **Input**: `MobileNumber`, `Email`
+3. **Query** `DuplicateChecker` table for:
+   - `CheckType` = 'MobileNumber' AND `CheckValue` = MobileNumber
+   - `CheckType` = 'Email' AND `CheckValue` = Email
+4. **If** any record found:
+   - **Return** `true`
+5. **Else**
+   - **Return** `false`
+6. **End**
+
+#### Adding a Payment
+1. **Start**
+2. **Input**: `StudentId`, `PaymentMode`, `Amount`
+3. **Insert** into `Payment` table:
+   - `StudentId`
+   - `PaymentMode`
+   - `PaymentDate` = current date and time
+   - `Amount`
+4. **Print** "Payment added successfully."
+5. **End**
+
+This algorithm ensures that duplicates are checked before inserting new student records and handles the insertion of payment details associated with students.
