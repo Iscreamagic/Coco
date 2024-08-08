@@ -1,0 +1,161 @@
+Sure! Here is a structure for a database with the required tables and C# code to handle operations including checking for duplicates and handling payment modes.
+
+### Database Structure
+
+Let's create three tables: `Student`, `Payment`, and `DuplicateChecker`.
+
+1. **Student Table**
+    - `StudentId` (Primary Key)
+    - `Name`
+    - `MobileNumber`
+    - `Email`
+    - `DateOfBirth`
+
+2. **Payment Table**
+    - `PaymentId` (Primary Key)
+    - `StudentId` (Foreign Key)
+    - `PaymentMode`
+    - `PaymentDate`
+    - `Amount`
+
+3. **DuplicateChecker Table**
+    - `CheckerId` (Primary Key)
+    - `StudentId` (Foreign Key)
+    - `CheckType`
+    - `CheckValue`
+
+### SQL Script to Create Tables
+
+```sql
+CREATE TABLE Student (
+    StudentId INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(100),
+    MobileNumber NVARCHAR(15),
+    Email NVARCHAR(100),
+    DateOfBirth DATE
+);
+
+CREATE TABLE Payment (
+    PaymentId INT PRIMARY KEY IDENTITY(1,1),
+    StudentId INT,
+    PaymentMode NVARCHAR(50),
+    PaymentDate DATETIME,
+    Amount DECIMAL(18, 2),
+    FOREIGN KEY (StudentId) REFERENCES Student(StudentId)
+);
+
+CREATE TABLE DuplicateChecker (
+    CheckerId INT PRIMARY KEY IDENTITY(1,1),
+    StudentId INT,
+    CheckType NVARCHAR(50),
+    CheckValue NVARCHAR(100),
+    FOREIGN KEY (StudentId) REFERENCES Student(StudentId)
+);
+```
+
+### C# Code for Operations
+
+Below is the C# code to perform CRUD operations on the `Student` table, check for duplicates, and handle payments.
+
+```csharp
+using System;
+using System.Data.SqlClient;
+
+public class StudentRegistration
+{
+    private string connectionString = "your_connection_string_here";
+
+    public void AddStudent(string name, string mobileNumber, string email, DateTime dateOfBirth)
+    {
+        if (IsDuplicate(mobileNumber, email))
+        {
+            Console.WriteLine("Duplicate entry found. Student already exists.");
+            return;
+        }
+
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "INSERT INTO Student (Name, MobileNumber, Email, DateOfBirth) VALUES (@Name, @MobileNumber, @Email, @DateOfBirth)";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@Name", name);
+            cmd.Parameters.AddWithValue("@MobileNumber", mobileNumber);
+            cmd.Parameters.AddWithValue("@Email", email);
+            cmd.Parameters.AddWithValue("@DateOfBirth", dateOfBirth);
+            cmd.ExecuteNonQuery();
+            
+            int studentId = (int)cmd.ExecuteScalar();
+            AddDuplicateChecker(studentId, "MobileNumber", mobileNumber);
+            AddDuplicateChecker(studentId, "Email", email);
+
+            Console.WriteLine("Student added successfully.");
+        }
+    }
+
+    private bool IsDuplicate(string mobileNumber, string email)
+    {
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "SELECT COUNT(*) FROM DuplicateChecker WHERE (CheckType = 'MobileNumber' AND CheckValue = @MobileNumber) OR (CheckType = 'Email' AND CheckValue = @Email)";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@MobileNumber", mobileNumber);
+            cmd.Parameters.AddWithValue("@Email", email);
+            int count = (int)cmd.ExecuteScalar();
+
+            return count > 0;
+        }
+    }
+
+    private void AddDuplicateChecker(int studentId, string checkType, string checkValue)
+    {
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "INSERT INTO DuplicateChecker (StudentId, CheckType, CheckValue) VALUES (@StudentId, @CheckType, @CheckValue)";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@StudentId", studentId);
+            cmd.Parameters.AddWithValue("@CheckType", checkType);
+            cmd.Parameters.AddWithValue("@CheckValue", checkValue);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    public void AddPayment(int studentId, string paymentMode, decimal amount)
+    {
+        using (SqlConnection conn = new SqlConnection(connectionString))
+        {
+            conn.Open();
+            string query = "INSERT INTO Payment (StudentId, PaymentMode, PaymentDate, Amount) VALUES (@StudentId, @PaymentMode, @PaymentDate, @Amount)";
+            SqlCommand cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@StudentId", studentId);
+            cmd.Parameters.AddWithValue("@PaymentMode", paymentMode);
+            cmd.Parameters.AddWithValue("@PaymentDate", DateTime.Now);
+            cmd.Parameters.AddWithValue("@Amount", amount);
+            cmd.ExecuteNonQuery();
+
+            Console.WriteLine("Payment added successfully.");
+        }
+    }
+}
+```
+
+### Example Usage
+
+```csharp
+class Program
+{
+    static void Main()
+    {
+        StudentRegistration registration = new StudentRegistration();
+        
+        // Add a new student
+        registration.AddStudent("John Doe", "1234567890", "john.doe@example.com", new DateTime(2000, 1, 1));
+        
+        // Add a payment for the student
+        registration.AddPayment(1, "Credit Card", 500.00m);
+    }
+}
+```
+
+Replace `"your_connection_string_here"` with your actual database connection string. This code provides a basic structure and functionality for the required operations.
